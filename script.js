@@ -37,68 +37,33 @@ async function generateAIPrompt(mode) {
     const prompt = `Generate one original, funny, and creative ${mode.toUpperCase()} question for a Truth or Dare game. Keep it under 25 words and make it engaging for friends. Don't repeat any previous prompts.`;
     
     try {
-        // Check if OpenAI API is enabled
+        // Use the secure serverless function if enabled
         if (AI_CONFIG.openai.enabled) {
-            console.log('Attempting to use OpenAI API...');
-            console.log('Using model:', AI_CONFIG.openai.model);
-            
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            console.log('Calling secure /api/openai endpoint...');
+            const response = await fetch(AI_CONFIG.openai.endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    prompt,
                     model: AI_CONFIG.openai.model,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are a fun party game assistant. Generate creative Truth or Dare questions that are engaging and appropriate for friends.'
-                        },
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    max_tokens: AI_CONFIG.openai.maxTokens,
+                    maxTokens: AI_CONFIG.openai.maxTokens,
                     temperature: AI_CONFIG.openai.temperature
                 })
             });
-            
-            console.log('OpenAI API Response status:', response.status);
-            
+            console.log('API Response status:', response.status);
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('OpenAI API Error response:', errorText);
-                throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+                console.error('API Error response:', errorText);
+                throw new Error(`API error: ${response.status} - ${errorText}`);
             }
-            
             const data = await response.json();
-            console.log('OpenAI API Response data:', data);
-            
-            // Check if the response has the expected structure
-            if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
-                console.error('Unexpected OpenAI API response structure:', data);
-                throw new Error('Invalid OpenAI API response structure');
-            }
-            
-            // Get the generated text
-            let generatedText = data.choices[0].message.content.trim();
-            console.log('OpenAI Raw generated text:', generatedText);
-            
-            // Clean up any extra formatting
-            generatedText = generatedText.replace(/^[^a-zA-Z]*/, ''); // Remove leading non-letters
-            generatedText = generatedText.replace(/[^a-zA-Z0-9\s\?\.\!,]*$/, ''); // Remove trailing special chars
-            
-            console.log('OpenAI Cleaned generated text:', generatedText);
-            
-            // More lenient validation for OpenAI responses
+            let generatedText = data.result.trim();
+            console.log('API generated text:', generatedText);
             if (generatedText.length < 5 || generatedText.length > 200) {
-                console.log('OpenAI generated text too short or too long, using fallback');
-                throw new Error('OpenAI generated text too short or too long');
+                throw new Error('API generated text too short or too long');
             }
-            
-            // If the text looks good, return it
             return generatedText;
         }
         

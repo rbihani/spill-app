@@ -92,4 +92,28 @@ This application works on all modern browsers that support:
 - Include sound effects and animations
 - Add multiplayer functionality
 - Save favorite prompts
-- Add custom prompt creation 
+- Add custom prompt creation
+
+## Secure OpenAI API Usage
+
+This project uses a secure Vercel serverless function to call the OpenAI API. **Never commit your API key to GitHub!**
+
+### Local Development
+1. Copy `.env.example` to `.env` and add your OpenAI API key:
+   ```
+   cp .env.example .env
+   # Edit .env and add your key
+   ```
+2. Your key will be used by the serverless function, not exposed to the frontend.
+
+### Vercel Deployment
+1. Go to your Vercel project dashboard → Settings → Environment Variables
+2. Add:
+   - **Name:** `OPENAI_API_KEY`
+   - **Value:** your actual OpenAI API key
+3. Redeploy your project
+
+### How it works
+- The frontend calls `/api/openai` (a Vercel serverless function)
+- The function uses your secret key from the environment to call OpenAI
+- The result is returned to the frontend 
